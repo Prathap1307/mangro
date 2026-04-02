@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mangro Admin Access</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="admin-wrap">
+      <section class="admin-card" id="loginCard">
+        <h1>Admin Login</h1>
+        <p class="muted">Enter your secret credentials to continue.</p>
+
+        <label for="username">Username</label>
+        <input id="username" type="text" autocomplete="off" />
+
+        <label for="password">Password</label>
+        <input id="password" type="password" />
+
+        <button id="loginBtn">Access Secret Admin</button>
+        <p class="admin-msg" id="message"></p>
+      </section>
+
+      <section class="admin-card hidden" id="panelCard">
+        <h1>Mangro Secret Admin</h1>
+        <p>Welcome, <strong>admin</strong>. You are now acting as admin.</p>
+
+        <hr class="divider" />
+
+        <h2>User Actions</h2>
+        <p class="muted">
+          Live action feed from the app home screen (searches, category taps,
+          navigation, and secret-admin gesture).
+        </p>
+        <div class="action-tools">
+          <button id="refreshActionsBtn">Refresh Actions</button>
+          <button id="clearActionsBtn">Clear Actions</button>
+        </div>
+        <p id="actionsState" class="admin-msg neutral">No actions loaded yet.</p>
+        <ul id="actionsList" class="cap-list"></ul>
+
+        <hr class="divider" />
+
+        <h2>Accessibility Permission</h2>
+        <p class="muted">
+          Check what accessibility-related permissions are available and show what
+          this admin can see.
+        </p>
+        <button id="permissionBtn">Check Permissions</button>
+        <p id="permissionState" class="admin-msg neutral">
+          Permission state: not requested
+        </p>
+        <ul id="permissionList" class="cap-list"></ul>
+
+        <h3>Other User View (with same permissions)</h3>
+        <p class="muted">
+          If another user opens this secret admin, this is what they can see with
+          the current saved permission profile.
+        </p>
+        <div id="otherUserView" class="other-user-view"></div>
+
+        <hr class="divider" />
+
+        <h2>Media Access</h2>
+        <p class="muted">
+          Request photos and videos using user-granted permission and review what level was granted.
+        </p>
+        <button id="storageBtn">Request Media Access</button>
+        <p id="photoPermissionState" class="admin-msg neutral">
+          Media permission: not requested
+        </p>
+        <div id="photoGrid" class="photo-grid" aria-live="polite"></div>
+      </section>
+    </div>
+
+    <script>
+      const SECRET_USERNAME = 'user12';
+      const SECRET_PASSWORD = 'user12';
+      const PROFILE_KEY = 'mangro_permission_profile_v1';
+      const LOG_KEY = 'mangro_user_actions_v1';
+
+      const loginBtn = document.getElementById('loginBtn');
+      const usernameInput = document.getElementById('username');
+      const passwordInput = document.getElementById('password');
+      const message = document.getElementById('message');
+      const loginCard = document.getElementById('loginCard');
+      const panelCard = document.getElementById('panelCard');
+
+      const refreshActionsBtn = document.getElementById('refreshActionsBtn');
+      const clearActionsBtn = document.getElementById('clearActionsBtn');
+      const actionsState = document.getElementById('actionsState');
+      const actionsList = document.getElementById('actionsList');
+
+      const permissionBtn = document.getElementById('permissionBtn');
+      const permissionState = document.getElementById('permissionState');
+      const permissionList = document.getElementById('permissionList');
+      const otherUserView = document.getElementById('otherUserView');
+
+      const storageBtn = document.getElementById('storageBtn');
+      const photoPermissionState = document.getElementById('photoPermissionState');
+      const photoGrid = document.getElementById('photoGrid');
+
+      const readLogs = () => {
+        try {
+          const raw = localStorage.getItem(LOG_KEY);
+          return raw ? JSON.parse(raw) : [];
+        } catch (error) {
+          return [];
+        }
+      };
+
+      const renderActions = () => {
+        const logs = readLogs().slice().reverse();
+        actionsList.innerHTML = '';
+
+        if (!logs.length) {
+          actionsState.textContent = 'No user actions tracked yet.';
+          return;
+        }
+
+        actionsState.textContent = `Showing ${logs.length} recent user actions.`;
+
+        for (const log of logs) {
+          const li = document.createElement('li');
+          const time = new Date(log.at).toLocaleString();
+          li.textContent = `${time} — ${log.action}${log.detail ? `: ${log.detail}` : ''}`;
+          actionsList.appendChild(li);
+        }
+      };
+
+      refreshActionsBtn.addEventListener('click', renderActions);
+      clearActionsBtn.addEventListener('click', () => {
+        localStorage.removeItem(LOG_KEY);
+        renderActions();
+      });
+
+      const capabilityMessage = (name, state) => {
+        if (state === 'granted') {
+          return `${name}: granted — admin can access this feature.`;
+        }
+        if (state === 'prompt') {
+          return `${name}: prompt — admin must request before access.`;
+        }
+        return `${name}: denied/unsupported — admin cannot access this feature.`;
+      };
+
+      const renderOtherUserView = (profile) => {
+        if (!profile) {
+          otherUserView.textContent =
+            'No saved permission profile yet. Run "Check Permissions" first.';
+          return;
+        }
+
+        const lines = profile.permissions.map(
+          ({ name, state }) => `• ${capabilityMessage(name, state)}`
+        );
+        otherUserView.innerHTML = `<strong>Saved profile:</strong><br>${lines.join('<br>')}`;
+      };
+
+      const saveProfile = (profile) => {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      };
+
+      const loadProfile = () => {
+        try {
+          const raw = localStorage.getItem(PROFILE_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (error) {
+          return null;
+        }
+      };
+
+      loginBtn.addEventListener('click', () => {
+        const username = usernameInput.value.trim();
+        const password = passwordInput.value;
+
+        if (username === SECRET_USERNAME && password === SECRET_PASSWORD) {
+          message.textContent = '';
+          loginCard.classList.add('hidden');
+          panelCard.classList.remove('hidden');
+          renderActions();
+          renderOtherUserView(loadProfile());
+          return;
+        }
+
+        message.textContent = 'Invalid username or password.';
+      });
+
+      permissionBtn.addEventListener('click', async () => {
+        if (!navigator.permissions) {
+          permissionState.textContent =
+            'Permission state: Permissions API unsupported in this browser.';
+          return;
+        }
+
+        const checks = [
+          { name: 'geolocation', label: 'Location' },
+          { name: 'notifications', label: 'Notifications' },
+          { name: 'clipboard-read', label: 'Clipboard Read' },
+        ];
+
+        const profile = { createdAt: new Date().toISOString(), permissions: [] };
+        permissionList.innerHTML = '';
+
+        for (const check of checks) {
+          let state = 'unsupported';
+          try {
+            const result = await navigator.permissions.query({ name: check.name });
+            state = result.state;
+          } catch (error) {
+            state = 'unsupported';
+          }
+
+          profile.permissions.push({ name: check.label, state });
+
+          const li = document.createElement('li');
+          li.textContent = capabilityMessage(check.label, state);
+          permissionList.appendChild(li);
+        }
+
+        permissionState.textContent = `Permission state: checked at ${new Date().toLocaleTimeString()}`;
+        saveProfile(profile);
+        renderOtherUserView(profile);
+      });
+
+      const renderMediaPreview = (file) => {
+        const card = document.createElement('article');
+        card.className = 'photo-item';
+
+        const source = URL.createObjectURL(file);
+        const caption = document.createElement('p');
+        caption.textContent = file.name;
+
+        if (file.type.startsWith('video/')) {
+          const video = document.createElement('video');
+          video.src = source;
+          video.controls = true;
+          video.preload = 'metadata';
+          card.appendChild(video);
+        } else {
+          const img = document.createElement('img');
+          img.src = source;
+          img.alt = file.name;
+          card.appendChild(img);
+        }
+
+        card.appendChild(caption);
+        photoGrid.appendChild(card);
+      };
+
+      storageBtn.addEventListener('click', async () => {
+        if (!window.showOpenFilePicker) {
+          photoPermissionState.textContent =
+            'Media permission: unsupported in this browser.';
+          return;
+        }
+
+        try {
+          const handles = await window.showOpenFilePicker({
+            multiple: true,
+            types: [
+              {
+                description: 'Media',
+                accept: {
+                  'image/*': ['.png', '.jpg', '.jpeg', '.webp'],
+                  'video/*': ['.mp4', '.mov', '.webm'],
+                },
+              },
+            ],
+          });
+
+          const permissionChecks = await Promise.all(
+            handles.map((handle) => handle.queryPermission({ mode: 'read' }))
+          );
+          const allGranted = permissionChecks.every((state) => state === 'granted');
+
+          photoPermissionState.textContent = `Media permission: ${allGranted ? 'granted' : 'partial'}. Accessible items: ${handles.length}`;
+          photoPermissionState.classList.add('neutral');
+
+          photoGrid.innerHTML = '';
+          for (const handle of handles) {
+            const file = await handle.getFile();
+            renderMediaPreview(file);
+          }
+        } catch (error) {
+          photoPermissionState.textContent =
+            'Media permission: denied or dismissed by user.';
+        }
+      });
+    </script>
+  </body>
+</html>

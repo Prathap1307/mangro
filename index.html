@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mangro | Food Delivery</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="location">
+          <p class="muted">Deliver to</p>
+          <h1>Downtown, San Francisco</h1>
+        </div>
+        <button class="avatar" aria-label="Open profile">M</button>
+      </header>
+
+      <section class="search-wrap" aria-label="Search food">
+        <span class="icon">🔎</span>
+        <input type="text" placeholder="Search for restaurants, dishes..." />
+      </section>
+
+      <section class="hero-card">
+        <div>
+          <p class="chip">FREE DELIVERY</p>
+          <h2>Fresh food in <span>under 25 mins</span></h2>
+          <p class="muted">Order from top-rated places near you.</p>
+          <button>Order now</button>
+        </div>
+        <div class="hero-emoji" aria-hidden="true">🍜</div>
+      </section>
+
+      <section class="section-head">
+        <h3>Categories</h3>
+        <a href="#">See all</a>
+      </section>
+
+      <section class="categories" aria-label="Food categories">
+        <button class="cat active">🍔 Burger</button>
+        <button class="cat">🍕 Pizza</button>
+        <button class="cat">🥗 Healthy</button>
+        <button class="cat">🍣 Sushi</button>
+      </section>
+
+      <section class="section-head">
+        <h3>Popular near you</h3>
+      </section>
+
+      <main class="cards">
+        <article class="card">
+          <div class="img" role="img" aria-label="Burger meal">🍔</div>
+          <div class="meta">
+            <div>
+              <h4>Smash House</h4>
+              <p>American • $$</p>
+            </div>
+            <span>⭐ 4.8</span>
+          </div>
+          <div class="meta sub">
+            <p>20-30 min</p>
+            <p>$0 delivery</p>
+          </div>
+        </article>
+
+        <article class="card">
+          <div class="img" role="img" aria-label="Sushi meal">🍣</div>
+          <div class="meta">
+            <div>
+              <h4>Sakura Bowl</h4>
+              <p>Japanese • $$$</p>
+            </div>
+            <span>⭐ 4.7</span>
+          </div>
+          <div class="meta sub">
+            <p>15-25 min</p>
+            <p>$1.99 delivery</p>
+          </div>
+        </article>
+      </main>
+
+      <nav class="bottom-nav" aria-label="Main">
+        <a class="active" href="#">🏠<span>Home</span></a>
+        <a href="#">🧾<span>Orders</span></a>
+        <a href="#">❤️<span>Favorites</span></a>
+        <a href="#">👤<span>Profile</span></a>
+      </nav>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
