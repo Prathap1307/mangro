@@ -7,9 +7,7 @@
     "start": "expo start --no-web",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "build": "npm run build:android",
-    "build:android": "npx --yes eas-cli build --platform android",
-    "build:ios": "npx --yes eas-cli build --platform ios"
+    "build": "npx expo export --platform android"
   },
   "dependencies": {
     "expo": "~53.0.0",
