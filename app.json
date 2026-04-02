@@ -1,0 +1,7 @@
+{
+  "expo": {
+    "name": "mangro-mobile",
+    "slug": "mangro-mobile",
+    "platforms": ["ios", "android"]
+  }
+}
